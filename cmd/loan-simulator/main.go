@@ -104,24 +104,24 @@ func calcLoanTables(p Params) []LoanTable {
 
 	t := time.Now()
 	for i := 0; i < p.Months; i++ {
-		repaidAmount := calcRepaidAmount(p)
-		interest := calcInterest(p)
-		princepalAmount := repaidAmount - interest
-		balance := p.CurrentBalance - princepalAmount
-		p.CurrentBalance = balance
+		ra := calcRepaidAmount(p)
+		int := calcInterest(p)
+		pa := ra - int
+		b := p.CurrentBalance - pa
+		p.CurrentBalance = b
 
-		if balance < repaidAmount {
-			repaidAmount = repaidAmount + balance
-			balance = 0
+		if b < ra {
+			ra = ra + b
+			b = 0
 		}
 
 		loanTables = append(loanTables, LoanTable{
 			Count:           i + 1,
 			Date:            t.Format("2006-01"),
-			RepaidAmount:    repaidAmount,
-			PrincipalAmount: princepalAmount,
-			Interest:        interest,
-			Balance:         balance,
+			RepaidAmount:    ra,
+			PrincipalAmount: pa,
+			Interest:        int,
+			Balance:         b,
 		})
 		t = t.AddDate(0, 1, 0)
 	}
