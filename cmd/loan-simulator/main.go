@@ -4,15 +4,14 @@ import (
 	"flag"
 	"fmt"
 	"math"
-	"strconv"
 	"time"
 )
 
 type Params struct {
-	Year                int     //
+	Year                int     // 返済期間(年)
 	Months              int     // 回数
 	InterestRate        float64 // 金利(年利)
-	MonthlyInterestRate float64 // 月利
+	MonthlyInterestRate float64 // 金利(月利)
 	AmountMan           int     // 金額(万円)
 	Amount              int     // 金額
 	CurrentBalance      int     // 残高
@@ -30,100 +29,102 @@ type LoanTable struct {
 type LoanTables []LoanTable
 
 func main() {
-	year, interestRate, amount := parseArgs()
-	params := toParams(year, interestRate, amount)
+	y, ir, a := parseArgs()
+	p := toParams(y, ir, a)
 
+	loanTables := calcLoanTables(p)
+
+	printParams(p)
+	fmt.Println("---")
+	printLoanTables(loanTables)
+}
+
+func parseArgs() (int, float64, int) {
+	y := flag.Int("y", 35, "返済期間(年)")
+	ir := flag.Float64("i", 1, "金利(%)")
+	a := flag.Int("a", 0, "借入金額(万円)")
+	flag.Parse()
+
+	return *y, *ir, *a
+}
+
+func toParams(y int, ir float64, a int) Params {
+	return Params{
+		Year:                y,
+		Months:              calcMonths(y),
+		InterestRate:        ir,
+		MonthlyInterestRate: ir / 100 / 12,
+		AmountMan:           a,
+		Amount:              a * 10000,
+		CurrentBalance:      a * 10000,
+	}
+}
+
+func printParams(p Params) {
+	fmt.Printf("返済期間: %v 年\n", p.Year)
+	fmt.Printf("返済期間: %v ヶ月\n", p.Months)
+	fmt.Printf("金利: %v ％\n", p.InterestRate)
+	fmt.Printf("月利: %v\n", p.MonthlyInterestRate)
+	fmt.Printf("借入金額: %v 万円\n", p.AmountMan)
+	fmt.Printf("借入金額: %v 円\n", p.Amount)
+}
+
+func printLoanTables(lts LoanTables) {
+	fmt.Printf("回数 年/月 返済額 元金 利息 借入残高\n")
+	for _, lt := range lts {
+		fmt.Printf("%3v  %v  %v  %v  %v   %v\n",
+			lt.Count,
+			lt.Date,
+			lt.RepaidAmount,
+			lt.PrincipalAmount,
+			lt.Interest,
+			lt.Balance,
+		)
+	}
+}
+
+func calcMonths(y int) int {
+	return y * 12
+}
+
+func calcRepaidAmount(p Params) int {
+	r := math.Abs(float64(p.Amount) * float64(p.MonthlyInterestRate) * math.Pow((1+p.MonthlyInterestRate), float64(p.Months)) / (math.Pow((1+p.MonthlyInterestRate), float64(p.Months)) - 1))
+
+	return int(r)
+}
+
+func calcInterest(p Params) int {
+	r := (float64(p.CurrentBalance) * p.MonthlyInterestRate * 1)
+
+	return int(r)
+}
+
+func calcLoanTables(p Params) []LoanTable {
 	var loanTables LoanTables
 
 	t := time.Now()
-	for i := 0; i < params.Months; i++ {
-		repaidAmount := calcRepaidAmount(params)
-		interest := calcInterest(params)
-		princepalAmount := repaidAmount - interest
-		balance := params.CurrentBalance - princepalAmount
-		params.CurrentBalance = balance
+	for i := 0; i < p.Months; i++ {
+		ra := calcRepaidAmount(p)
+		int := calcInterest(p)
+		pa := ra - int
+		b := p.CurrentBalance - pa
+		p.CurrentBalance = b
 
-		if balance < repaidAmount {
-			repaidAmount = repaidAmount + balance
-			balance = 0
+		if b < ra {
+			ra = ra + b
+			b = 0
 		}
 
 		loanTables = append(loanTables, LoanTable{
 			Count:           i + 1,
 			Date:            t.Format("2006-01"),
-			RepaidAmount:    repaidAmount,    // 返済金額
-			PrincipalAmount: princepalAmount, // 元金
-			Interest:        interest,        // 利息
-			Balance:         balance,         // 残高
+			RepaidAmount:    ra,
+			PrincipalAmount: pa,
+			Interest:        int,
+			Balance:         b,
 		})
 		t = t.AddDate(0, 1, 0)
 	}
-	printParams(params)
-	fmt.Println("---")
-	printLoanTables(loanTables)
-}
 
-func calcRepaidAmount(params Params) int {
-	r := math.Abs(float64(params.Amount) * float64(params.MonthlyInterestRate) * math.Pow((1+params.MonthlyInterestRate), float64(params.Months)) / (math.Pow((1+params.MonthlyInterestRate), float64(params.Months)) - 1))
-
-	return int(r)
-}
-
-func calcInterest(params Params) int {
-	r := (float64(params.CurrentBalance) * params.MonthlyInterestRate * 1)
-
-	return int(r)
-}
-
-func parseArgs() (string, string, string) {
-	year := flag.String("y", "", "返済期間(年)")
-	interestRate := flag.String("i", "", "金利(%)")
-	amount := flag.String("a", "", "借入金額(万円)")
-	flag.Parse()
-
-	return *year, *interestRate, *amount
-}
-
-func toParams(year, interestRate, amount string) Params {
-	iYear, _ := strconv.Atoi(year)
-	iInterestRate, _ := strconv.ParseFloat(interestRate, 64)
-	iAmountMan, _ := strconv.Atoi(amount)
-	iAmount, _ := strconv.Atoi(amount)
-
-	return Params{
-		Year:                iYear,
-		Months:              calcMonths(iYear),
-		InterestRate:        iInterestRate,
-		MonthlyInterestRate: iInterestRate / 100 / 12,
-		AmountMan:           iAmountMan,
-		Amount:              iAmount * 10000,
-		CurrentBalance:      iAmount * 10000,
-	}
-}
-
-func printParams(params Params) {
-	fmt.Printf("返済期間: %v 年\n", params.Year)
-	fmt.Printf("返済期間: %v ヶ月\n", params.Months)
-	fmt.Printf("金利: %v ％\n", params.InterestRate)
-	fmt.Printf("月利: %v\n", params.MonthlyInterestRate)
-	fmt.Printf("借入金額: %v 万円\n", params.AmountMan)
-	fmt.Printf("借入金額: %v 円\n", params.Amount)
-}
-
-func printLoanTables(loanTables LoanTables) {
-	fmt.Printf("回数 年/月 返済額 元金 利息 借入残高\n")
-	for _, loan := range loanTables {
-		fmt.Printf("%3v  %v  %v  %v  %v   %v\n",
-			loan.Count,
-			loan.Date,
-			loan.RepaidAmount,
-			loan.PrincipalAmount,
-			loan.Interest,
-			loan.Balance,
-		)
-	}
-}
-
-func calcMonths(year int) int {
-	return year * 12
+	return loanTables
 }
