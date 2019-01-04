@@ -9,10 +9,10 @@ import (
 )
 
 type Params struct {
-	Year                int     //
+	Year                int     // 返済期間(年)
 	Months              int     // 回数
 	InterestRate        float64 // 金利(年利)
-	MonthlyInterestRate float64 // 月利
+	MonthlyInterestRate float64 // 金利(月利)
 	AmountMan           int     // 金額(万円)
 	Amount              int     // 金額
 	CurrentBalance      int     // 残高
