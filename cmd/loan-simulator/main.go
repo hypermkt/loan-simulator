@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"math"
-	"strconv"
 	"time"
 )
 
@@ -63,41 +62,24 @@ func main() {
 	printLoanTables(loanTables)
 }
 
-func calcRepaidAmount(p Params) int {
-	r := math.Abs(float64(p.Amount) * float64(p.MonthlyInterestRate) * math.Pow((1+p.MonthlyInterestRate), float64(p.Months)) / (math.Pow((1+p.MonthlyInterestRate), float64(p.Months)) - 1))
-
-	return int(r)
-}
-
-func calcInterest(p Params) int {
-	r := (float64(p.CurrentBalance) * p.MonthlyInterestRate * 1)
-
-	return int(r)
-}
-
-func parseArgs() (string, string, string) {
-	y := flag.String("y", "", "返済期間(年)")
-	ir := flag.String("i", "", "金利(%)")
-	a := flag.String("a", "", "借入金額(万円)")
+func parseArgs() (int, float64, int) {
+	y := flag.Int("y", 35, "返済期間(年)")
+	ir := flag.Float64("i", 1, "金利(%)")
+	a := flag.Int("a", 0, "借入金額(万円)")
 	flag.Parse()
 
 	return *y, *ir, *a
 }
 
-func toParams(y, ir, a string) Params {
-	iy, _ := strconv.Atoi(y)
-	iir, _ := strconv.ParseFloat(ir, 64)
-	iam, _ := strconv.Atoi(a)
-	ia, _ := strconv.Atoi(a)
-
+func toParams(y int, ir float64, a int) Params {
 	return Params{
-		Year:                iy,
-		Months:              calcMonths(iy),
-		InterestRate:        iir,
-		MonthlyInterestRate: iir / 100 / 12,
-		AmountMan:           iam,
-		Amount:              ia * 10000,
-		CurrentBalance:      ia * 10000,
+		Year:                y,
+		Months:              calcMonths(y),
+		InterestRate:        ir,
+		MonthlyInterestRate: ir / 100 / 12,
+		AmountMan:           a,
+		Amount:              a * 10000,
+		CurrentBalance:      a * 10000,
 	}
 }
 
@@ -126,4 +108,16 @@ func printLoanTables(lts LoanTables) {
 
 func calcMonths(y int) int {
 	return y * 12
+}
+
+func calcRepaidAmount(p Params) int {
+	r := math.Abs(float64(p.Amount) * float64(p.MonthlyInterestRate) * math.Pow((1+p.MonthlyInterestRate), float64(p.Months)) / (math.Pow((1+p.MonthlyInterestRate), float64(p.Months)) - 1))
+
+	return int(r)
+}
+
+func calcInterest(p Params) int {
+	r := (float64(p.CurrentBalance) * p.MonthlyInterestRate * 1)
+
+	return int(r)
 }
