@@ -1,4 +1,4 @@
-# loan-simulator
+# loan-simulator [![Build Status](https://travis-ci.org/hypermkt/loan-simulator.svg?branch=master)](https://travis-ci.org/hypermkt/loan-simulator)
 
 A command line tool to simulate a home loan.
 
