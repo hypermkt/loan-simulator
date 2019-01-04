@@ -51,10 +51,10 @@ func main() {
 		loanTables = append(loanTables, LoanTable{
 			Count:           i + 1,
 			Date:            t.Format("2006-01"),
-			RepaidAmount:    repaidAmount,    // 返済金額
-			PrincipalAmount: princepalAmount, // 元金
-			Interest:        interest,        // 利息
-			Balance:         balance,         // 残高
+			RepaidAmount:    repaidAmount,
+			PrincipalAmount: princepalAmount,
+			Interest:        interest,
+			Balance:         balance,
 		})
 		t = t.AddDate(0, 1, 0)
 	}
