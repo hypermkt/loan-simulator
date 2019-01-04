@@ -30,18 +30,18 @@ type LoanTable struct {
 type LoanTables []LoanTable
 
 func main() {
-	year, interestRate, amount := parseArgs()
-	params := toParams(year, interestRate, amount)
+	y, ir, a := parseArgs()
+	p := toParams(y, ir, a)
 
 	var loanTables LoanTables
 
 	t := time.Now()
-	for i := 0; i < params.Months; i++ {
-		repaidAmount := calcRepaidAmount(params)
-		interest := calcInterest(params)
+	for i := 0; i < p.Months; i++ {
+		repaidAmount := calcRepaidAmount(p)
+		interest := calcInterest(p)
 		princepalAmount := repaidAmount - interest
-		balance := params.CurrentBalance - princepalAmount
-		params.CurrentBalance = balance
+		balance := p.CurrentBalance - princepalAmount
+		p.CurrentBalance = balance
 
 		if balance < repaidAmount {
 			repaidAmount = repaidAmount + balance
@@ -58,72 +58,72 @@ func main() {
 		})
 		t = t.AddDate(0, 1, 0)
 	}
-	printParams(params)
+	printParams(p)
 	fmt.Println("---")
 	printLoanTables(loanTables)
 }
 
-func calcRepaidAmount(params Params) int {
-	r := math.Abs(float64(params.Amount) * float64(params.MonthlyInterestRate) * math.Pow((1+params.MonthlyInterestRate), float64(params.Months)) / (math.Pow((1+params.MonthlyInterestRate), float64(params.Months)) - 1))
+func calcRepaidAmount(p Params) int {
+	r := math.Abs(float64(p.Amount) * float64(p.MonthlyInterestRate) * math.Pow((1+p.MonthlyInterestRate), float64(p.Months)) / (math.Pow((1+p.MonthlyInterestRate), float64(p.Months)) - 1))
 
 	return int(r)
 }
 
-func calcInterest(params Params) int {
-	r := (float64(params.CurrentBalance) * params.MonthlyInterestRate * 1)
+func calcInterest(p Params) int {
+	r := (float64(p.CurrentBalance) * p.MonthlyInterestRate * 1)
 
 	return int(r)
 }
 
 func parseArgs() (string, string, string) {
-	year := flag.String("y", "", "返済期間(年)")
-	interestRate := flag.String("i", "", "金利(%)")
-	amount := flag.String("a", "", "借入金額(万円)")
+	y := flag.String("y", "", "返済期間(年)")
+	ir := flag.String("i", "", "金利(%)")
+	a := flag.String("a", "", "借入金額(万円)")
 	flag.Parse()
 
-	return *year, *interestRate, *amount
+	return *y, *ir, *a
 }
 
-func toParams(year, interestRate, amount string) Params {
-	iYear, _ := strconv.Atoi(year)
-	iInterestRate, _ := strconv.ParseFloat(interestRate, 64)
-	iAmountMan, _ := strconv.Atoi(amount)
-	iAmount, _ := strconv.Atoi(amount)
+func toParams(y, ir, a string) Params {
+	iy, _ := strconv.Atoi(y)
+	iir, _ := strconv.ParseFloat(ir, 64)
+	iam, _ := strconv.Atoi(a)
+	ia, _ := strconv.Atoi(a)
 
 	return Params{
-		Year:                iYear,
-		Months:              calcMonths(iYear),
-		InterestRate:        iInterestRate,
-		MonthlyInterestRate: iInterestRate / 100 / 12,
-		AmountMan:           iAmountMan,
-		Amount:              iAmount * 10000,
-		CurrentBalance:      iAmount * 10000,
+		Year:                iy,
+		Months:              calcMonths(iy),
+		InterestRate:        iir,
+		MonthlyInterestRate: iir / 100 / 12,
+		AmountMan:           iam,
+		Amount:              ia * 10000,
+		CurrentBalance:      ia * 10000,
 	}
 }
 
-func printParams(params Params) {
-	fmt.Printf("返済期間: %v 年\n", params.Year)
-	fmt.Printf("返済期間: %v ヶ月\n", params.Months)
-	fmt.Printf("金利: %v ％\n", params.InterestRate)
-	fmt.Printf("月利: %v\n", params.MonthlyInterestRate)
-	fmt.Printf("借入金額: %v 万円\n", params.AmountMan)
-	fmt.Printf("借入金額: %v 円\n", params.Amount)
+func printParams(p Params) {
+	fmt.Printf("返済期間: %v 年\n", p.Year)
+	fmt.Printf("返済期間: %v ヶ月\n", p.Months)
+	fmt.Printf("金利: %v ％\n", p.InterestRate)
+	fmt.Printf("月利: %v\n", p.MonthlyInterestRate)
+	fmt.Printf("借入金額: %v 万円\n", p.AmountMan)
+	fmt.Printf("借入金額: %v 円\n", p.Amount)
 }
 
-func printLoanTables(loanTables LoanTables) {
+func printLoanTables(lts LoanTables) {
 	fmt.Printf("回数 年/月 返済額 元金 利息 借入残高\n")
-	for _, loan := range loanTables {
+	for _, lt := range lts {
 		fmt.Printf("%3v  %v  %v  %v  %v   %v\n",
-			loan.Count,
-			loan.Date,
-			loan.RepaidAmount,
-			loan.PrincipalAmount,
-			loan.Interest,
-			loan.Balance,
+			lt.Count,
+			lt.Date,
+			lt.RepaidAmount,
+			lt.PrincipalAmount,
+			lt.Interest,
+			lt.Balance,
 		)
 	}
 }
 
-func calcMonths(year int) int {
-	return year * 12
+func calcMonths(y int) int {
+	return y * 12
 }
