@@ -20,3 +20,24 @@ func TestCalcMonths(t *testing.T) {
 		}
 	}
 }
+
+func TestCalcInterest(t *testing.T) {
+	patterns := []struct {
+		c        int
+		mir      float64
+		expected int
+	}{
+		{30000000, 0.000833333333333334, 25000},
+	}
+
+	for idx, pattern := range patterns {
+		p := Params{
+			CurrentBalance:      pattern.c,
+			MonthlyInterestRate: pattern.mir,
+		}
+		actual := calcInterest(p)
+		if actual != pattern.expected {
+			t.Errorf("pattern %d: want %d, actual %d", idx, pattern.expected, actual)
+		}
+	}
+}
