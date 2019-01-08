@@ -1,2 +1,3 @@
 test:
+	dep ensure
 	go test -v ./...
