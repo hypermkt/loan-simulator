@@ -4,7 +4,11 @@ import (
 	"flag"
 	"fmt"
 	"math"
+	"os"
+	"strconv"
 	"time"
+
+	"github.com/olekukonko/tablewriter"
 )
 
 type Params struct {
@@ -16,17 +20,6 @@ type Params struct {
 	Amount              int     // 金額
 	CurrentBalance      int     // 残高
 }
-
-type LoanTable struct {
-	Count           int    // 回数
-	Date            string // 年/月
-	RepaidAmount    int    // 返済額
-	PrincipalAmount int    // 元金
-	Interest        int    // 利息
-	Balance         int    // 残高
-}
-
-type LoanTables []LoanTable
 
 func main() {
 	y, ir, a := parseArgs()
@@ -69,18 +62,13 @@ func printParams(p Params) {
 	fmt.Printf("借入金額: %v 円\n", p.Amount)
 }
 
-func printLoanTables(lts LoanTables) {
-	fmt.Printf("回数 年/月 返済額 元金 利息 借入残高\n")
+func printLoanTables(lts [][]string) {
+	table := tablewriter.NewWriter(os.Stdout)
+	table.SetHeader([]string{"回数", "年/月", "返済額", "元金", "利息", "借入残高"})
 	for _, lt := range lts {
-		fmt.Printf("%3v  %v  %v  %v  %v   %v\n",
-			lt.Count,
-			lt.Date,
-			lt.RepaidAmount,
-			lt.PrincipalAmount,
-			lt.Interest,
-			lt.Balance,
-		)
+		table.Append(lt)
 	}
+	table.Render() // Send output
 }
 
 func calcMonths(y int) int {
@@ -99,10 +87,10 @@ func calcInterest(p Params) int {
 	return int(r)
 }
 
-func calcLoanTables(p Params) []LoanTable {
-	var loanTables LoanTables
-
+func calcLoanTables(p Params) [][]string {
 	t := time.Now()
+	rows := [][]string{}
+
 	for i := 0; i < p.Months; i++ {
 		ra := calcRepaidAmount(p)
 		int := calcInterest(p)
@@ -115,16 +103,18 @@ func calcLoanTables(p Params) []LoanTable {
 			b = 0
 		}
 
-		loanTables = append(loanTables, LoanTable{
-			Count:           i + 1,
-			Date:            t.Format("2006-01"),
-			RepaidAmount:    ra,
-			PrincipalAmount: pa,
-			Interest:        int,
-			Balance:         b,
-		})
+		row := []string{
+			strconv.Itoa(i + 1),
+			t.Format("2006-01"),
+			strconv.Itoa(ra),
+			strconv.Itoa(pa),
+			strconv.Itoa(int),
+			strconv.Itoa(b),
+		}
+		rows = append(rows, row)
+
 		t = t.AddDate(0, 1, 0)
 	}
 
-	return loanTables
+	return rows
 }
